@@ -51,52 +51,11 @@ class MainController extends Controller
         $exercises = [];
         for ($i = 0; $i < $numberOfExercises; $i++)
         {
-
-            $operation = $operations[array_rand($operations)];
-
-            $number1 = random_int($min, $max);
-            $number2 = random_int($min, $max);
-
-            // Garante que number1 seja sempre maior ou igual a number2
-            while ($number1 < $number2)
-            {
-                $number2 = random_int($min, $max);
-            }
-
-
-            $exercise = '';
-            $solution = '';
-
-            switch ($operation)
-            {
-                case 'sum':
-                    $exercise = "$number1 + $number2 = ";
-                    $solution = $number1 + $number2;
-                    break;
-                case 'subtraction':
-                    $exercise = "$number1 - $number2 = ";
-                    $solution = $number1 - $number2;
-                    break;
-                case 'multiplication':
-                    $exercise = "$number1 x $number2 = ";
-                    $solution = $number1 * $number2;
-                    break;
-                case 'division':
-                    if ($number2 == 0)
-                    {
-                        $number2 = 1;
-                    }
-                    $exercise = "$number1 ÷ $number2 = ";
-                    $solution = $number1 / $number2;
-                    break;
-            }
-
-            $exercises[] = [
-                'exercise_number' => $i,
-                'exercise' => $exercise,
-                'solution' => "$exercise $solution",
-            ];
+            $exercises[] = $this->generateExercice($i, $operations, $min, $max);
         }
+
+        // colocar os exercícios na sessão para ser baixado
+        session(['exercices' => $exercises]);
 
         return view('operations', ['exercises' => $exercises]);
     }
@@ -109,5 +68,53 @@ class MainController extends Controller
     public function exportExcercises()
     {
         echo 'exportar exercicios';
+    }
+
+    private function generateExercice($i, $operations, $min, $max): array
+    {
+        $operation = $operations[array_rand($operations)];
+
+        $number1 = random_int($min, $max);
+        $number2 = random_int($min, $max);
+
+        // Garante que number1 seja sempre maior ou igual a number2
+        while ($number1 < $number2)
+        {
+            $number2 = random_int($min, $max);
+        }
+
+
+        $exercise = '';
+        $solution = '';
+
+        switch ($operation)
+        {
+            case 'sum':
+                $exercise = "$number1 + $number2 = ";
+                $solution = $number1 + $number2;
+                break;
+            case 'subtraction':
+                $exercise = "$number1 - $number2 = ";
+                $solution = $number1 - $number2;
+                break;
+            case 'multiplication':
+                $exercise = "$number1 x $number2 = ";
+                $solution = $number1 * $number2;
+                break;
+            case 'division':
+                if ($number2 == 0)
+                {
+                    $number2 = 1;
+                }
+                $exercise = "$number1 ÷ $number2 = ";
+                $solution = $number1 / $number2;
+                break;
+        }
+
+        return [
+            'exercise_number' => $i,
+            'exercise' => $exercise,
+            'solution' => "$exercise $solution",
+        ];
     }
 }
