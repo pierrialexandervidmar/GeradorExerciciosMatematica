@@ -12,7 +12,7 @@ class MainController extends Controller
         return view('home');
     }
 
-    public function generateExcercises(Request $request)
+    public function generateExcercises(Request $request): View
     {
         $request->validate([
             'check_sum' => 'required_without_all:check_subtraction,check_multiplication,check_division',
@@ -70,15 +70,15 @@ class MainController extends Controller
             switch ($operation)
             {
                 case 'sum':
-                    $exercise = "$number1 + $number2";
+                    $exercise = "$number1 + $number2 = ";
                     $solution = $number1 + $number2;
                     break;
                 case 'subtraction':
-                    $exercise = "$number1 - $number2";
+                    $exercise = "$number1 - $number2 = ";
                     $solution = $number1 - $number2;
                     break;
                 case 'multiplication':
-                    $exercise = "$number1 * $number2";
+                    $exercise = "$number1 x $number2 = ";
                     $solution = $number1 * $number2;
                     break;
                 case 'division':
@@ -86,7 +86,7 @@ class MainController extends Controller
                     {
                         $number2 = 1;
                     }
-                    $exercise = "$number1 ÷ $number2";
+                    $exercise = "$number1 ÷ $number2 = ";
                     $solution = $number1 / $number2;
                     break;
             }
@@ -97,7 +97,8 @@ class MainController extends Controller
                 'solution' => "$exercise $solution",
             ];
         }
-        dd($exercises);
+
+        return view('operations', ['exercises' => $exercises]);
     }
 
     public function printExcercises()
