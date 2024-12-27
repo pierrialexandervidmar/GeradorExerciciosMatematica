@@ -5,6 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * Class MainController
+ * 
+ * Controlador principal para manipulação de exercícios matemáticos.
+ * Inclui geração, exibição e exportação de exercícios com base em parâmetros fornecidos.
+ * 
+ * @author Pierri Alexander Vidmar
+ * @since 12/2024
+ */
 class MainController extends Controller
 {
     public function home(): View
@@ -12,6 +21,20 @@ class MainController extends Controller
         return view('home');
     }
 
+    /**
+     * Gera um único exercício matemático com base nos parâmetros fornecidos.
+     *
+     * @param int $i O índice do exercício atual.
+     * @param array $operations Lista de operações possíveis (e.g., 'sum', 'subtraction').
+     * @param int $min O valor mínimo permitido para os números.
+     * @param int $max O valor máximo permitido para os números.
+     *
+     * @return array Um array associativo com os dados do exercício:
+     *               - 'operation': A operação matemática.
+     *               - 'exercise_number': O número do exercício.
+     *               - 'exercise': A string do exercício.
+     *               - 'solution': A solução do exercício.
+     */
     public function generateExcercises(Request $request): View
     {
         $request->validate([
@@ -60,16 +83,96 @@ class MainController extends Controller
         return view('operations', ['exercises' => $exercises]);
     }
 
+    /**
+     * Exibe os exercícios matemáticos armazenados na sessão.
+     * 
+     * Este método verifica se os exercícios estão disponíveis na sessão.
+     * Se não houver exercícios, redireciona para a página inicial com uma mensagem de erro.
+     * Caso contrário, exibe os exercícios e suas soluções em formato HTML.
+     * 
+     * @return mixed Redireciona para a página inicial com mensagem de erro ou exibe os exercícios no navegador.
+     */
     public function printExcercises()
     {
-        echo 'imprimir exercicios no navegador';
+        // Verificar se os exercícios estão na sessão
+        if (!session()->has('exercices'))
+        {
+            return redirect()->route('home')->with('error', 'Não há exercícios disponíveis para impressão.');
+        }
+
+        $exercises = session('exercices');
+
+        echo '<pre>';
+        echo '<h1>Exercícios de Matemática</h1>';
+        echo "Gerado em: " . date('d/m/Y H:i:s') . "\n";
+        echo '<hr>';
+
+        // // Imprimir os exercícios
+        foreach ($exercises as $exercise)
+        {
+            echo '<h2><small>Exercício ' . $exercise['exercise_number'] . ': </small>' . $exercise['exercise'] . '</h2>';
+        }
+
+        echo '<hr>';
+        echo "<small>Soluções</small><br>";
+        foreach ($exercises as $exercise)
+        {
+            echo '<small>Exercício ' . $exercise['exercise_number'] . ': ' . $exercise['solution'] . '</small><br>';
+        }
     }
 
+    /**
+     * Exporta os exercícios armazenados na sessão para um arquivo de texto.
+     * Caso não haja exercícios na sessão, redireciona para a página inicial com uma mensagem de erro.
+     *
+     * @return \Illuminate\Http\Response A resposta contendo o arquivo para download.
+     */
     public function exportExcercises()
     {
-        echo 'exportar exercicios';
+        // Verificar se os exercícios estão na sessão
+        if (!session()->has('exercices'))
+        {
+            return redirect()->route('home')->with('error', 'Não há exercícios disponíveis para impressão.');
+        }
+
+        // Cria o arquivo para download com o conteúdo dos exercícios
+        $exercises = session('exercices');
+
+        $filename = 'exercises_' . env('APP_NAME') . '_' . date('YmdHis') . '.txt';
+
+        $content = '';
+        foreach ($exercises as $exercise)
+        {
+            $content .= $exercise['exercise_number'] . ': ' . $exercise['exercise'] . "\n";
+        }
+
+        // Incluir as soluções no arquivo
+        $content .= "\n";
+        $content .= "Soluções:\n" . str_repeat('-', 20) . "\n";
+        foreach ($exercises as $exercise)
+        {
+            $content .= $exercise['exercise_number'] . ': ' . $exercise['solution'] . "\n";
+        }
+
+        return response($content)
+            ->header('Content-Type', 'text/plain')
+            ->header('Content-Disposition', 'attachment; filename=' . $filename);
     }
 
+    /**
+     * Gera um único exercício matemático com base nos parâmetros fornecidos.
+     *
+     * @param int $i O índice do exercício atual.
+     * @param array $operations Lista de operações possíveis (e.g., 'sum', 'subtraction').
+     * @param int $min O valor mínimo permitido para os números.
+     * @param int $max O valor máximo permitido para os números.
+     *
+     * @return array Um array associativo com os dados do exercício:
+     *               - 'operation': A operação matemática.
+     *               - 'exercise_number': O número do exercício.
+     *               - 'exercise': A string do exercício.
+     *               - 'solution': A solução do exercício.
+     */
     private function generateExercice($i, $operations, $min, $max): array
     {
         $operation = $operations[array_rand($operations)];
@@ -112,7 +215,8 @@ class MainController extends Controller
         }
 
         return [
-            'exercise_number' => $i,
+            'operation' => $operation,
+            'exercise_number' => str_pad($i + 1, 2, '0', STR_PAD_LEFT),
             'exercise' => $exercise,
             'solution' => "$exercise $solution",
         ];
